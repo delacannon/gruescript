@@ -22,15 +22,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 /*** toggle light/dark view ***/
 IS_DARK = true;
 function toggleDark() {
-	if(IS_DARK) {
-		$('#editor').addClass('light');
-		$('#toggleDarkButton').text('Light');
-		IS_DARK = false;
-	} else {
-		$('#editor').removeClass('light');
-		$('#toggleDarkButton').text('Dark');
-		IS_DARK = true;
-	}
+  if (IS_DARK) {
+    $("#editor").addClass("light");
+    $("#toggleDarkButton").text("Light");
+    IS_DARK = false;
+  } else {
+    $("#editor").removeClass("light");
+    $("#toggleDarkButton").text("Dark");
+    IS_DARK = true;
+  }
 }
 
 /*********** files *********/
@@ -38,74 +38,70 @@ GRUESCRIPT_SAVED = true;
 GSEDIT = null;
 SYNTAX_DIV = null;
 // load gruescript from a file into the editor pane
-$(document).ready(function() {
-	GSEDIT = document.getElementById('gsEdit');
-	SYNTAX_DIV = document.getElementById('syntaxHighlighting');
-	
-	document.getElementById('chooseFile').onchange = function(){
+$(document).ready(function () {
+  GSEDIT = document.getElementById("gsEdit");
+  SYNTAX_DIV = document.getElementById("syntaxHighlighting");
 
-	  var file = this.files[0];
-	  
-	  this.value=null; // so that 'change' will fire if the user reloads the same file
+  document.getElementById("chooseFile").onchange = function () {
+    var file = this.files[0];
 
-	  var reader = new FileReader();
-	  reader.onload = function(progressEvent){
-		
-		GSEDIT.value = this.result;
-		highlight();
-		readGruescript();
-		GRUESCRIPT_CHANGED = false;
-		
-	  };
-	  reader.readAsText(file);
-	};
-	
-	if(load_from_browser(true)) {
-		gs_console('restored from previous session');
-		buildGame(true);
-	} else {
-		loadExample("Cloak of Darkness");
-	}
-	
-	GSEDIT.addEventListener('input', function() {
-		highlight();
-		GRUESCRIPT_CHANGED = true;
-		GRUESCRIPT_SAVED = false;
-	});
+    this.value = null; // so that 'change' will fire if the user reloads the same file
 
-	GSEDIT.addEventListener('scroll', function() {
-		syncScroll();
-	});
-	GSEDIT.addEventListener('change', function() {
-		syncScroll();
-	});
-	GSEDIT.addEventListener('focus', function() {
-		syncScroll();
-	});
-	GSEDIT.addEventListener('blur', function() {
-		syncScroll();
-	});
-	GSEDIT.addEventListener('click', function() {
-		syncScroll();
-	});
-	GSEDIT.addEventListener('mouseover', function() {
-		syncScroll();
-	});
-	GSEDIT.addEventListener('mouseout', function() {
-		syncScroll();
-	});
-	
-	window.addEventListener('beforeunload', function(e) {
-		if(!GRUESCRIPT_SAVED) {
-			e.preventDefault();
-			e.returnValue = '';
-		}
-	});
-	
+    var reader = new FileReader();
+    reader.onload = function (progressEvent) {
+      GSEDIT.value = this.result;
+      highlight();
+      readGruescript();
+      GRUESCRIPT_CHANGED = false;
+    };
+    reader.readAsText(file);
+  };
+
+  if (load_from_browser(true)) {
+    gs_console("restored from previous session");
+    buildGame(true);
+  } else {
+    loadExample("Cloak of Darkness");
+  }
+
+  GSEDIT.addEventListener("input", function () {
+    highlight();
+    GRUESCRIPT_CHANGED = true;
+    GRUESCRIPT_SAVED = false;
+  });
+
+  GSEDIT.addEventListener("scroll", function () {
+    syncScroll();
+  });
+  GSEDIT.addEventListener("change", function () {
+    syncScroll();
+  });
+  GSEDIT.addEventListener("focus", function () {
+    syncScroll();
+  });
+  GSEDIT.addEventListener("blur", function () {
+    syncScroll();
+  });
+  GSEDIT.addEventListener("click", function () {
+    syncScroll();
+  });
+  GSEDIT.addEventListener("mouseover", function () {
+    syncScroll();
+  });
+  GSEDIT.addEventListener("mouseout", function () {
+    syncScroll();
+  });
+
+  window.addEventListener("beforeunload", function (e) {
+    if (!GRUESCRIPT_SAVED) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
 });
 function syncScroll() {
-	SYNTAX_DIV.scrollTop = GSEDIT.scrollTop;
-	SYNTAX_DIV.scrollLeft = GSEDIT.scrollLeft;
+  SYNTAX_DIV.scrollTop = GSEDIT.scrollTop;
+  SYNTAX_DIV.scrollLeft = GSEDIT.scrollLeft;
 }
 
 DOING_HIGHLIGHTING = false;
@@ -116,55 +112,54 @@ HILITE_TIMEOUT = 100;
 MIN_LENGTH_TO_WORRY = 10000;
 WORRYING = false;
 function highlight() {
-	syncScroll();
-	if(!WORRYING && GSEDIT.value.length >= MIN_LENGTH_TO_WORRY) {
-		WORRYING = true;
-	}
-	if(WORRYING && DOING_HIGHLIGHTING) {
-		if(!GSEDIT.classList.contains('waiting')) {
-			GSEDIT.classList += ' waiting';
-		}
-		CHANGES_TO_HIGHLIGHT = true;
-	} else {
-		// start highlighting
-		DOING_HIGHLIGHTING = true;
-		doHighlighting();
-	}
+  syncScroll();
+  if (!WORRYING && GSEDIT.value.length >= MIN_LENGTH_TO_WORRY) {
+    WORRYING = true;
+  }
+  if (WORRYING && DOING_HIGHLIGHTING) {
+    if (!GSEDIT.classList.contains("waiting")) {
+      GSEDIT.classList += " waiting";
+    }
+    CHANGES_TO_HIGHLIGHT = true;
+  } else {
+    // start highlighting
+    DOING_HIGHLIGHTING = true;
+    doHighlighting();
+  }
 }
 function done_highlighting() {
-	// ...but are we really?
-	syncScroll();
-	if(CHANGES_TO_HIGHLIGHT) {
-		if(!WAITING_TO_HIGHLIGHT) {
-			WAITING_TO_HIGHLIGHT = setTimeout(()=> {
-				WAITING_TO_HIGHLIGHT = 0;
-				CHANGES_TO_HIGHLIGHT = false;
-				doHighlighting();
-			}, 0);
-		}
-	} else {
-		DOING_HIGHLIGHTING = false;
-		$('#gsEdit').removeClass('waiting');
-		WORRYING = GSEDIT.value.length >= MIN_LENGTH_TO_WORRY;
-		clearTimeout(AUTOSAVE_TIMEOUT);
-		AUTOSAVE_TIMEOUT = setTimeout(autosave, 1000);
-	}
+  // ...but are we really?
+  syncScroll();
+  if (CHANGES_TO_HIGHLIGHT) {
+    if (!WAITING_TO_HIGHLIGHT) {
+      WAITING_TO_HIGHLIGHT = setTimeout(() => {
+        WAITING_TO_HIGHLIGHT = 0;
+        CHANGES_TO_HIGHLIGHT = false;
+        doHighlighting();
+      }, 0);
+    }
+  } else {
+    DOING_HIGHLIGHTING = false;
+    $("#gsEdit").removeClass("waiting");
+    WORRYING = GSEDIT.value.length >= MIN_LENGTH_TO_WORRY;
+    clearTimeout(AUTOSAVE_TIMEOUT);
+    AUTOSAVE_TIMEOUT = setTimeout(autosave, 1000);
+  }
 }
 
 function doHighlighting() {
+  var editorContent = GSEDIT.value;
 
-	var editorContent = GSEDIT.value;
+  //var lines = SYNTAX_DIV.innerText.split('\n\n');
 
-	//var lines = SYNTAX_DIV.innerText.split('\n\n');
-	
-	var lines = [];
-	var ln = 0;
-	var editorLines = editorContent.split('\n');
-	for(var i in editorLines) {
-		++ln;
-		
-		var line = editorLines[i];
-		/*
+  var lines = [];
+  var ln = 0;
+  var editorLines = editorContent.split("\n");
+  for (var i in editorLines) {
+    ++ln;
+
+    var line = editorLines[i];
+    /*
 		if(ln < startHighlighting) {
 			lines.push(line+'<br/>');
 			continue;
@@ -173,182 +168,224 @@ function doHighlighting() {
 			break;
 		}
 		 */
-		
-		// & < and > will break the display
-		line = line.replaceAll('&', '&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-		
-		
-		var hashIx = line.indexOf('#');
-		var comment = '';
-		if(hashIx>=0) {
-			comment = '<span class="comment">' + line.substring(hashIx)+'</span>';
-			line = line.substring(0,hashIx);
-		}
-		
-		var colonIx = line.indexOf(':');
-		var message = '';
-		if(colonIx>=0) {
-			message = ':<span class="string">' + line.substring(colonIx+1) + '</span>';
-			line = line.substring(0, colonIx);
-		}
-		
-		// instructions (& other things) with a string as their first argument
-		line = line.replace(/(^\s*(say|die|js|game|author|prompt|display)\s+)(.*)$/g, '$1<span class="string">$3</span>');
-		// instructions with a string as their second argument, and block names that include a printed message
-		line = line.replace(/(^\s*(write|is|room|thing|tagdesc|sayat|localise|localize)\s+[a-zA-Z_]+\s+)(.*)$/g, '$1<span class="string">$3</span>');
-		var str = '';
-		var strIx = line.indexOf('<span class="string">');
-		if(strIx>=0) {
-			str = line.substring(strIx);
-			line = line.substring(0,strIx);
-		}
-		
-		// commands
-		// todo: might save a few milliseconds if the words in these regexps were sorted by most common first
-		line = line.replaceAll(/(^\s*)(run|hide|bring|give|carry|wear|unwear|unhold|put|putnear|goto|swap|tag|untag|tagroom|untagroom|assign|write|add|random|say|die|open|close|status|pick|count|isthing|isroom|log)(?=\s|$)/g,'$1<span class="command">$2</span>');
-		// assertions
-		line = line.replaceAll(/(^\s*)(!?(carried|held|here|inscope|visible|at|thingat|near|has|hasany|hasall|taghere|cansee|is|eq|gt|lt|contains|continue|try|js))(?=\s|$)/g,'$1<span class="assertion">$2</span>');
-		// iterators
-		line = line.replaceAll(/(^\s*)(!?(sequence|select|all))(?=\s|$)/g,'$1<span class="iterator">$2</span>');
-		// block types
-		line=line.replaceAll(/(^\s*)(game|room|exit|thing|rule|verb|setverb|proc|tagdesc|var)(?=\s|$)/g,'$1<span class="blocktype">$2</span>');
-		
-		// special tags, variables and property names, and iterator lists
-		line=line.replaceAll(/\s(things|rooms|carried|in|tagged|these|here|inscope|start|dark|portable|wearable|worn|alive|lightsource|plural|indef|def|male|female|nonbinary|list_last|quiet|on|off|score|maxscore|intransitive)(?=\s|$)/g,' <span class="specialtag">$1</span>');
 
-		// properties and directions
-		line=line.replaceAll(/(^\s*)(prop|name|desc|north|northeast|east|southeast|south|southwest|west|northwest|up|down|in|out|fore|aft|port|starboard|id|author|version|person|examine|conversation|show_title|instructions|wait|tags|dir|loc|verbs|cverbs|display|prompt|pronoun|localise|localize|color|colour)(?=\s|$)/g,'$1<span class="prop">$2</span>');
+    // & < and > will break the display
+    line = line
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
 
-		// variables and numbers
-		line = line.replaceAll(/\s(\$[a-zA-Z_]+)(?=\s|$)/g,' <span class="variable">$1</span>');
-		line = line.replaceAll(/\s([0-9]+)(?=\s|$)/g,' <span class="number">$1</span>');
-		
-		var lineContent = (line + str + message + comment);
-		if(!lineContent) lineContent = '&nbsp;'; // '<span style="color: #660000">#blank line</span>';
-		lines.push('<div class="line"><div id="ln_'+ln+'" class="lineNumber">'+ln+'&nbsp;</div>' + lineContent + '</div>');
-	}
-	SYNTAX_DIV.innerHTML = lines.join('');
-	setTimeout(()=>{
-		done_highlighting();
-	},0);
+    var hashIx = line.indexOf("#");
+    var comment = "";
+    if (hashIx >= 0) {
+      comment = '<span class="comment">' + line.substring(hashIx) + "</span>";
+      line = line.substring(0, hashIx);
+    }
+
+    var colonIx = line.indexOf(":");
+    var message = "";
+    if (colonIx >= 0) {
+      message =
+        ':<span class="string">' + line.substring(colonIx + 1) + "</span>";
+      line = line.substring(0, colonIx);
+    }
+
+    // instructions (& other things) with a string as their first argument
+    line = line.replace(
+      /(^\s*(say|die|js|game|author|prompt|display)\s+)(.*)$/g,
+      '$1<span class="string">$3</span>'
+    );
+    // instructions with a string as their second argument, and block names that include a printed message
+    line = line.replace(
+      /(^\s*(write|is|room|thing|tagdesc|sayat|localise|localize)\s+[a-zA-Z_]+\s+)(.*)$/g,
+      '$1<span class="string">$3</span>'
+    );
+    var str = "";
+    var strIx = line.indexOf('<span class="string">');
+    if (strIx >= 0) {
+      str = line.substring(strIx);
+      line = line.substring(0, strIx);
+    }
+
+    // commands
+    // todo: might save a few milliseconds if the words in these regexps were sorted by most common first
+    line = line.replaceAll(
+      /(^\s*)(run|hide|bring|give|carry|wear|unwear|unhold|put|putnear|goto|swap|tag|untag|tagroom|untagroom|assign|write|add|random|say|die|open|close|status|pick|count|isthing|isroom|log)(?=\s|$)/g,
+      '$1<span class="command">$2</span>'
+    );
+    // assertions
+    line = line.replaceAll(
+      /(^\s*)(!?(carried|held|here|inscope|visible|at|thingat|near|has|hasany|hasall|taghere|cansee|is|eq|gt|lt|contains|continue|try|js))(?=\s|$)/g,
+      '$1<span class="assertion">$2</span>'
+    );
+    // iterators
+    line = line.replaceAll(
+      /(^\s*)(!?(sequence|select|all))(?=\s|$)/g,
+      '$1<span class="iterator">$2</span>'
+    );
+    // block types
+    line = line.replaceAll(
+      /(^\s*)(game|room|exit|thing|rule|verb|setverb|proc|tagdesc|var)(?=\s|$)/g,
+      '$1<span class="blocktype">$2</span>'
+    );
+
+    // special tags, variables and property names, and iterator lists
+    line = line.replaceAll(
+      /\s(things|rooms|carried|in|tagged|these|here|inscope|start|dark|portable|wearable|worn|alive|lightsource|plural|indef|def|male|female|nonbinary|list_last|quiet|on|off|score|maxscore|intransitive)(?=\s|$)/g,
+      ' <span class="specialtag">$1</span>'
+    );
+
+    // properties and directions
+    line = line.replaceAll(
+      /(^\s*)(prop|name|desc|north|northeast|east|southeast|south|southwest|west|northwest|up|down|in|out|fore|aft|port|starboard|id|author|version|person|examine|conversation|show_title|instructions|map|wait|tags|dir|loc|verbs|cverbs|display|prompt|pronoun|localise|localize|color|colour)(?=\s|$)/g,
+      '$1<span class="prop">$2</span>'
+    );
+
+    // variables and numbers
+    line = line.replaceAll(
+      /\s(\$[a-zA-Z_]+)(?=\s|$)/g,
+      ' <span class="variable">$1</span>'
+    );
+    line = line.replaceAll(
+      /\s([0-9]+)(?=\s|$)/g,
+      ' <span class="number">$1</span>'
+    );
+
+    var lineContent = line + str + message + comment;
+    if (!lineContent) lineContent = "&nbsp;"; // '<span style="color: #660000">#blank line</span>';
+    lines.push(
+      '<div class="line"><div id="ln_' +
+        ln +
+        '" class="lineNumber">' +
+        ln +
+        "&nbsp;</div>" +
+        lineContent +
+        "</div>"
+    );
+  }
+  SYNTAX_DIV.innerHTML = lines.join("");
+  setTimeout(() => {
+    done_highlighting();
+  }, 0);
 }
-
 
 // save to local storage
 function save_to_browser() {
-	try {
-		window.localStorage.gruescriptSave = $('#gsEdit').val();
-		GRUESCRIPT_SAVED = true;
-		gs_console('saved to browser local storage');
-	} catch(e) {
-		gs_console("Couldn't access local storage")
-	}
+  try {
+    window.localStorage.gruescriptSave = $("#gsEdit").val();
+    GRUESCRIPT_SAVED = true;
+    gs_console("saved to browser local storage");
+  } catch (e) {
+    gs_console("Couldn't access local storage");
+  }
 }
 
 // autosave to local storage
 AUTOSAVE_TIMEOUT = null;
 AUTOSAVE_ERROR = false;
 function autosave(forceP) {
-	try {
-		window.localStorage.gruescriptAutosave = $('#gsEdit').val();
-		AUTOSAVE_ERROR = false;
-	} catch(e) {
-		if(!AUTOSAVE_ERROR) {
-			gs_console("Couldn't access local storage");
-		}
-		AUTOSAVE_ERROR = true;
-	}
+  try {
+    window.localStorage.gruescriptAutosave = $("#gsEdit").val();
+    AUTOSAVE_ERROR = false;
+  } catch (e) {
+    if (!AUTOSAVE_ERROR) {
+      gs_console("Couldn't access local storage");
+    }
+    AUTOSAVE_ERROR = true;
+  }
 }
 
 function load_from_browser(from_autosave) {
-	if(!GRUESCRIPT_SAVED && !from_autosave) {
-		if(!confirm("You have unsaved changes. Restore anyway?")) {
-			return;
-		}
-	}
-	try {
-		var savedGs = from_autosave ? window.localStorage.gruescriptAutosave :
-			window.localStorage.gruescriptSave;
-		
-		if(from_autosave && !savedGs) {
-			return false;
-		}
-		
-		if(!savedGs && !from_autosave) {
-			gs_console("couldn't restore - no saved content found in local storage");
-			return false;
-		}
-		
-		$('#gsEdit').val(savedGs);
-		highlight();
-		readGruescript();
-		GRUESCRIPT_CHANGED = false;
-		if(from_autosave) {
-			return true;
-		} else {
-			GRUESCRIPT_SAVED = true;
-		}
-	} catch(e) {
-		gs_console("Couldn't access local storage");
-	}
+  if (!GRUESCRIPT_SAVED && !from_autosave) {
+    if (!confirm("You have unsaved changes. Restore anyway?")) {
+      return;
+    }
+  }
+  try {
+    var savedGs = from_autosave
+      ? window.localStorage.gruescriptAutosave
+      : window.localStorage.gruescriptSave;
+
+    if (from_autosave && !savedGs) {
+      return false;
+    }
+
+    if (!savedGs && !from_autosave) {
+      gs_console("couldn't restore - no saved content found in local storage");
+      return false;
+    }
+
+    $("#gsEdit").val(savedGs);
+    highlight();
+    readGruescript();
+    GRUESCRIPT_CHANGED = false;
+    if (from_autosave) {
+      return true;
+    } else {
+      GRUESCRIPT_SAVED = true;
+    }
+  } catch (e) {
+    gs_console("Couldn't access local storage");
+  }
 }
 
 // download the gruescript source
 function download_gruescript() {
-	download(get_filename(), $('#gsEdit').val());
-	gs_console("downloading gruescript source. you can store this and reupload it later \
-	with the Import button, or edit it offline.");
-	GRUESCRIPT_SAVED = true;
+  download(get_filename(), $("#gsEdit").val());
+  gs_console(
+    "downloading gruescript source. you can store this and reupload it later \
+	with the Import button, or edit it offline."
+  );
+  GRUESCRIPT_SAVED = true;
 }
-FILENAME = '';
+FILENAME = "";
 function get_filename() {
-	var filename = $('#chooseFile').val()
-	if(filename) {
-		filename = filename.replace(/^.*[\\\/]/, '');
-		FILENAME = filename;
-		return filename;
-	} else {
-		var gamedata = getGameData();
-		if(gamedata && gamedata.title) {
-			FILENAME = gamedata.title.replace(/[^a-zA-Z0-9]/g, '_') + '.gru';
-			return FILENAME;
-		} else if(FILENAME) {
-			return FILENAME;
-		} else {
-			return 'mygame.gru';
-		}
-	}
+  var filename = $("#chooseFile").val();
+  if (filename) {
+    filename = filename.replace(/^.*[\\\/]/, "");
+    FILENAME = filename;
+    return filename;
+  } else {
+    var gamedata = getGameData();
+    if (gamedata && gamedata.title) {
+      FILENAME = gamedata.title.replace(/[^a-zA-Z0-9]/g, "_") + ".gru";
+      return FILENAME;
+    } else if (FILENAME) {
+      return FILENAME;
+    } else {
+      return "mygame.gru";
+    }
+  }
 }
 function get_export_filename() {
-	return get_filename().replace(/\.gru$/,'.html');
+  return get_filename().replace(/\.gru$/, ".html");
 }
 
 // export the game
 function export_game() {
-	if(GRUESCRIPT_CHANGED) {
-		if(!buildGame) {
-			gs_console('<span class="error">build errors - can\'t export</span>');
-			return false;
-		}
-	}
-	restart_game();
-	var html =
-`<html>
+  if (GRUESCRIPT_CHANGED) {
+    if (!buildGame) {
+      gs_console('<span class="error">build errors - can\'t export</span>');
+      return false;
+    }
+  }
+  restart_game();
+  var html = `<html>
 	<head>
 		<meta charset="UTF-8" />
 		<style type="text/css">
-			${ $('#exportableCSS').text() }
+			${$("#exportableCSS").text()}
 		</style>
 		<script type="text/javascript" language="JavaScript">
-			${ $('#jQueryMinJS').text() }
+			${$("#jQueryMinJS").text()}
 		</script>
 		<script type="text/javascript" language="JavaScript">
-			${ $('#exportableJS').text() }
+			${$("#exportableJS").text()}
 		</script>
 		<meta name="viewport" content="width=device-width, user-scalable=no" />
 	</head>
 	<body class="gs_export foo">
-		${ $('#game')[0].outerHTML }
+		${$("#game")[0].outerHTML}
 	</body>
 	<!--
 		The Gruescript code in the textarea below is NOT covered by
@@ -356,17 +393,18 @@ function export_game() {
 		whatever licence terms they wish. (Author, put your licence terms here, or as comments in your code, if you like.)
 	-->
 	<textarea id="gsEdit" style="display: none;">
-${ $('#gsEdit').val() }
+${$("#gsEdit").val()}
 	</textarea>
 </html>`;
-	
-	// remove the sample game and set IS_EXPORT to true
-	html = html.replace('IS_EXPORT = false;', 'IS_EXPORT = true;');
-	
-	gs_console("Downloading Gruescript game. This is an HTML page which you can open in your browser, or upload to your own itch page or elsewhere.");
-	download(get_export_filename(), html);
-}
 
+  // remove the sample game and set IS_EXPORT to true
+  html = html.replace("IS_EXPORT = false;", "IS_EXPORT = true;");
+
+  gs_console(
+    "Downloading Gruescript game. This is an HTML page which you can open in your browser, or upload to your own itch page or elsewhere."
+  );
+  download(get_export_filename(), html);
+}
 
 /*
  *
@@ -376,47 +414,52 @@ ${ $('#gsEdit').val() }
 
 EXAMPLES_SHOWN = false;
 function doExamplesMenu() {
-	if(EXAMPLES_SHOWN) {
-		$('#examples_label').html("Examples &darr;");
-		$('#examplesMenu').slideUp();
-		EXAMPLES_SHOWN = false;
-	} else {
-		$('#examples_label').html("Examples &uarr;");
-		$('#examplesMenu').slideDown();
-		EXAMPLES_SHOWN = true;
-		// if user leaves the menu open for 10s,
-		// check the mouse isn't still over it,
-		// and if it isn't, hide it
-		setTimeout(()=>{hideExamples();},10000);
-	}
+  if (EXAMPLES_SHOWN) {
+    $("#examples_label").html("Examples &darr;");
+    $("#examplesMenu").slideUp();
+    EXAMPLES_SHOWN = false;
+  } else {
+    $("#examples_label").html("Examples &uarr;");
+    $("#examplesMenu").slideDown();
+    EXAMPLES_SHOWN = true;
+    // if user leaves the menu open for 10s,
+    // check the mouse isn't still over it,
+    // and if it isn't, hide it
+    setTimeout(() => {
+      hideExamples();
+    }, 10000);
+  }
 }
 function hideExamples() {
-	// if mouse isn't currently over the menu, hide it
-	if(!$('#examplesMenu:hover').length && !$('#examplesButton:hover').length) {
-		$('#examplesMenu').slideUp();
-		EXAMPLES_SHOWN = false;
-	} else { // otherwise check again in 2s
-		setTimeout(()=>{hideExamples();},2000);
-	}
+  // if mouse isn't currently over the menu, hide it
+  if (!$("#examplesMenu:hover").length && !$("#examplesButton:hover").length) {
+    $("#examplesMenu").slideUp();
+    EXAMPLES_SHOWN = false;
+  } else {
+    // otherwise check again in 2s
+    setTimeout(() => {
+      hideExamples();
+    }, 2000);
+  }
 }
 
 function loadExample(example) {
-	if(!GRUESCRIPT_SAVED) {
-		if(!confirm("You have unsaved changes. Load example anyway?")) {
-			return false;
-		}
-	}
-	if(!EXAMPLES[example]) {
-		console.log('tried to load nonexistent example "'+example+'"??');
-	}
-	GSEDIT.value = EXAMPLES[example];
-	GRUESCRIPT_CHANGED = false;
-	GRUESCRIPT_SAVED = true;
-	
-	highlight();
-	readGruescript();
-	buildGame(true);
-};
+  if (!GRUESCRIPT_SAVED) {
+    if (!confirm("You have unsaved changes. Load example anyway?")) {
+      return false;
+    }
+  }
+  if (!EXAMPLES[example]) {
+    console.log('tried to load nonexistent example "' + example + '"??');
+  }
+  GSEDIT.value = EXAMPLES[example];
+  GRUESCRIPT_CHANGED = false;
+  GRUESCRIPT_SAVED = true;
+
+  highlight();
+  readGruescript();
+  buildGame(true);
+}
 
 EXAMPLES = {};
 
@@ -426,8 +469,7 @@ EXAMPLES = {};
  *
  *****************************************/
 
-
-EXAMPLES['Locks and keys'] = `game Locks and keys example
+EXAMPLES["Locks and keys"] = `game Locks and keys example
 author Robin Johnson
 id EXAMPLE_LOCKS
 examine on
@@ -728,7 +770,9 @@ untag thief just_moved`;
  *
  *****************************************/
 
-EXAMPLES['Cloak of Darkness'] = `# '#' means this line (or the rest of this line) is a comment
+EXAMPLES[
+  "Cloak of Darkness"
+] = `# '#' means this line (or the rest of this line) is a comment
 # (if you want to output '#' during your game, use "&num;")
 game Cloak of Darkness # Game title
 id CLOD # game ID (used to identify cookies; should be unique on your site)
@@ -844,7 +888,7 @@ die You lose`;
  *
  */
 
-EXAMPLES['The Party Line'] = `game The Party Line
+EXAMPLES["The Party Line"] = `game The Party Line
 id TPLGS
 author Robin Johnson
 version 2.0
@@ -2823,7 +2867,9 @@ hide band
 tag roadie crumbled
 hide roadie`;
 
-EXAMPLES["El manto de la oscuridad"] = `# '#' significa que esta linea es un comentario
+EXAMPLES[
+  "El manto de la oscuridad"
+] = `# '#' significa que esta linea es un comentario
 # (si necesitas escribir '#' en tu juego, usa "&num;")
 game El manto de la oscuridad # Título del juego
 id EMDLO # ID del juego (usado para identificar cookies; debería ser único en tu web)
